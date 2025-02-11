@@ -64,16 +64,17 @@ npm start
 | POST   | `/auth/register` | User registration |
 
 ## Project Structure
-src/
-├── config/         # Configuration files
-├── controllers/    # Route controllers
-├── data-access/    # Database access layer
-├── middleware/     # Express middleware
-├── models/         # Mongoose models
-├── routes/         # API routes
-├── services/       # Business logic
-├── types/          # TypeScript types
-└── utils/          # Utility functions
+```
+/src
+  ├── config/           # Configuration files (AWS, database, environment variables)
+  ├── controllers/      # Handles incoming requests and calls services
+  ├── data-access/      # Database repositories and queries
+  ├── middleware/       # Authentication, validation, and error handling
+  ├── models/          # Database models
+  ├── routes/          # Express routes definitions
+  ├── services/        # Business logic services
+  ├── types/           # Type definitions
+```
 
 ## Security Features
 * Security Features
