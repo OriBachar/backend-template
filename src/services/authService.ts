@@ -1,12 +1,10 @@
-import { UserRepository } from '../data-access';
+import { userRepository } from '../data-access/index';
 import { IUser, UserRole } from '../types/user';
 import { AppError } from '../types/error';
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 import bcrypt from 'bcrypt';
-
-const userRepository = new UserRepository();
 
 export const registerUser = async (email: string, password: string): Promise<IUser> => {
     const userExists = await userRepository.exists(email);

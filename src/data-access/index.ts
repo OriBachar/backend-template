@@ -1,2 +1,2 @@
-export * from './repositories/baseRepository';
-export * from './repositories/userRepository';
+export { createRepository } from './repositories/baseRepository';
+export { userRepository } from './repositories/userRepository';
