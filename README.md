@@ -1,4 +1,4 @@
-# Project Name
+# Backend Template
 
 ## Overview
 This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes authentication, database interactions, and AWS service integration.
