@@ -31,7 +31,7 @@ export const config = {
         region: getEnv('AWS_REGION'),
         s3Bucket: getEnv('AWS_S3_BUCKET'),
         ec2: {
-            imageId: getEnv('AWS_EC2_IMAGE_ID', true),
+            imageId: getEnv('AWS_EC2_IMAGE_ID'),
             instanceType: getEnv('AWS_EC2_INSTANCE_TYPE') || 't2.micro',
             minCount: parseInt(getEnv('AWS_EC2_MIN_COUNT') || '1'),
             maxCount: parseInt(getEnv('AWS_EC2_MAX_COUNT') || '1'),

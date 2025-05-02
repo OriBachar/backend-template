@@ -7,7 +7,11 @@ const RETRY_INTERVAL = 5000;
 
 export const connectDB = async (attempt = 1): Promise<void> => {
     try {
-        await mongoose.connect(`${config.mongodb.uri}/${config.mongodb.dbName}`);
+        const uri = config.mongodb.uri.endsWith(config.mongodb.dbName) 
+            ? config.mongodb.uri 
+            : `${config.mongodb.uri}/${config.mongodb.dbName}`;
+            
+        await mongoose.connect(uri);
         console.log('MongoDB connected successfully');
     } catch (error) {
         console.error(`MongoDB connection error attempt ${attempt}/${MAX_RETRIES}:`, error);

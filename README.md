@@ -11,6 +11,8 @@ This project is a Node.js backend written in TypeScript, designed with a modular
 - 🔄 Rate limiting and CORS protection
 - 🚦 Error handling middleware
 - 📝 Request logging with Morgan
+- 🐳 Docker and Docker Compose support for easy deployment
+- 📚 Swagger API documentation
 
 ## Prerequisites
 - **Node.js** (v16 or later recommended)
@@ -59,6 +61,43 @@ npm run build
 ```sh
 npm start
 ```
+
+## Docker Setup
+The application can be run using Docker and Docker Compose for easy deployment and development.
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Running with Docker Compose
+1. Build and start all services:
+   ```sh
+   docker-compose up --build
+   ```
+
+2. Run in detached mode (in the background):
+   ```sh
+   docker-compose up -d --build
+   ```
+
+3. Stop the services:
+   ```sh
+   docker-compose down
+   ```
+
+4. View logs:
+   ```sh
+   docker-compose logs -f
+   ```
+
+The application will be available at `http://localhost:3000`, and MongoDB will be accessible at `mongodb://localhost:27017`.
+
+### Environment Variables
+The following environment variables are automatically configured in the Docker environment:
+- `NODE_ENV=production`
+- `MONGODB_URI=mongodb://mongodb:27017/backend-template`
+
+Additional environment variables can be added to the `docker-compose.yml` file as needed.
 
 ## API Endpoints
 | Method | Endpoint | Description |
@@ -138,3 +177,15 @@ const instanceId = await deployEC2();
 
 ## Error Handling
 The application includes a centralized error handling system with custom AppError class.
+
+## API Documentation
+The API documentation is available at `/api-docs` when running the application in development mode. The documentation includes:
+
+- Detailed endpoint descriptions
+- Request/response schemas
+- Authentication requirements
+- Example requests and responses
+
+To access the documentation:
+1. Start the application in development mode
+2. Open your browser and navigate to `http://localhost:3000/api-docs`

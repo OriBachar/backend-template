@@ -11,12 +11,10 @@ export const registerUser = async (email: string, password: string): Promise<IUs
     if (userExists) {
         throw new AppError('User already exists with this email', 400);
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
     
     return await userRepository.create({
         email,
-        password: hashedPassword,
+        password,
         role: UserRole.USER,
         createdAt: new Date()
     });
