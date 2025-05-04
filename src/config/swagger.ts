@@ -13,7 +13,6 @@ const options: swaggerJsdoc.Options = {
     servers: [
       {
         url: 'http://localhost:3000',
-        description: 'Development server',
       },
     ],
     components: {
@@ -35,6 +34,6 @@ const options: swaggerJsdoc.Options = {
 
 const specs = swaggerJsdoc(options);
 
-export const setupSwagger = (app: Express) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+export const setupSwagger = (app: Express): void => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 }; 
