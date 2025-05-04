@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { registerUser, authenticateUser, generateTokenAndSetCookie } from '../services/authService';
+import { registerUser, authenticateUser, setAuthCookies } from '../services/authService';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../types/error';
 
@@ -13,8 +13,8 @@ export const register: RequestHandler = asyncHandler(async (req, res) => {
 });
 
 export const login: RequestHandler = asyncHandler(async (req, res) => {
-    const { user, token } = await authenticateUser(req.body.email, req.body.password);
-    generateTokenAndSetCookie(res, user._id, user.email);
+    const { user, tokens } = await authenticateUser(req.body.email, req.body.password);
+    setAuthCookies(res, tokens);
     res.status(200).json({ 
         status: 'success',
         message: 'Logged in successfully'

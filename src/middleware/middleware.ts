@@ -15,19 +15,33 @@ const app = express();
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    handler: (_req, _res) => {
-        throw new AppError('Too many requests from this IP, please try again later', 429);
-    }
+    message: 'Too many requests from this IP, please try again later',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
-app.use(limiter);
 
-
-app.use(compression({
-    threshold: 100 * 1024,
-    brotli: true
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"],
+        },
+    },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: true,
+    crossOriginResourcePolicy: { policy: "same-site" },
+    dnsPrefetchControl: { allow: false },
+    frameguard: { action: 'deny' },
+    hidePoweredBy: true,
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    ieNoOpen: true,
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xssFilter: true,
 }));
-
-app.use(helmet());
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -38,22 +52,16 @@ app.use(cors({
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    credentials: true,
+    maxAge: 86400,
 }));
 
-app.use(express.json({ 
-    limit: '10mb',
-    verify: (req, _res, buf) => {
-        try {
-            JSON.parse(buf.toString());
-        } catch (e) {
-            throw new AppError('Invalid JSON payload', 400);
-        }
-    }
-}));
-
+app.use(limiter);
+app.use(compression());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 app.use(mongoSanitize());
 app.use(hpp());
 

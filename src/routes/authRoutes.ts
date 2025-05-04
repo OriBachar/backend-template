@@ -23,9 +23,24 @@ const router = Router();
  *               email:
  *                 type: string
  *                 format: email
+ *                 description: User's email address
+ *                 minLength: 1
+ *                 maxLength: 255
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: User's password
+ *                 minLength: 8
+ *                 maxLength: 100
+ *                 pattern: ^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,100}$
+ *                 example: Password123!
+ *                 x-pattern-description: |
+ *                   Password must contain:
+ *                   - At least 8 characters
+ *                   - At least one uppercase letter
+ *                   - At least one lowercase letter
+ *                   - At least one number
+ *                   - At least one special character
  *     responses:
  *       201:
  *         description: User successfully registered
@@ -55,9 +70,24 @@ router.post('/register', validateRegister, register);
  *               email:
  *                 type: string
  *                 format: email
+ *                 description: User's email address
+ *                 minLength: 1
+ *                 maxLength: 255
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: User's password
+ *                 minLength: 8
+ *                 maxLength: 100
+ *                 pattern: ^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,100}$
+ *                 example: Password123!
+ *                 x-pattern-description: |
+ *                   Password must contain:
+ *                   - At least 8 characters
+ *                   - At least one uppercase letter
+ *                   - At least one lowercase letter
+ *                   - At least one number
+ *                   - At least one special character
  *     responses:
  *       200:
  *         description: User successfully logged in
@@ -66,8 +96,12 @@ router.post('/register', validateRegister, register);
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 status:
  *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Logged in successfully
  *       401:
  *         description: Invalid credentials
  */
