@@ -1,18 +1,24 @@
 # Backend Template
 
 ## Overview
-This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes authentication, database interactions, and AWS service integration.
+This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes robust authentication, database interactions, AWS service integration, and comprehensive security features.
 
 ## Features
-- 🔒 Secure authentication using JWT
-- 🛡️ Input validation with Zod
+- 🔒 Secure authentication with JWT token rotation
+- 🛡️ Advanced input validation with Zod
 - 🗄️ MongoDB integration with Mongoose
-- ☁️ AWS integration ready
+- ☁️ AWS integration ready (S3, EC2)
 - 🔄 Rate limiting and CORS protection
-- 🚦 Error handling middleware
+- 🚦 Comprehensive error handling middleware
 - 📝 Request logging with Morgan
 - 🐳 Docker and Docker Compose support for easy deployment
 - 📚 Swagger API documentation
+- 🔐 Advanced security headers and CORS settings
+- 🔄 JWT token rotation for enhanced security
+- 🛡️ HTTP Parameter Pollution protection
+- 🧹 MongoDB sanitization
+- 🔒 Password hashing with bcrypt
+- 🚫 Rate limiting for API protection
 
 ## Prerequisites
 - **Node.js** (v16 or later recommended)
@@ -102,8 +108,9 @@ Additional environment variables can be added to the `docker-compose.yml` file a
 ## API Endpoints
 | Method | Endpoint | Description |
 |--------|---------|-------------|
-| POST   | `/auth/login` | User login |
-| POST   | `/auth/register` | User registration |
+| POST   | `/auth/login` | User login with JWT token rotation |
+| POST   | `/auth/register` | User registration with password hashing |
+| POST   | `/auth/refresh` | Refresh JWT tokens |
 
 ## Project Structure
 ```
@@ -116,17 +123,21 @@ Additional environment variables can be added to the `docker-compose.yml` file a
   ├── routes/          # Express routes definitions
   ├── services/        # Business logic services
   ├── types/           # Type definitions
+  ├── utils/           # Utility functions and helpers
 ```
 
 ## Security Features
-* Security Features
-* Helmet for security headers
-* Rate limiting
-* CORS protection
-* MongoDB sanitization
-* HTTP Parameter Pollution protection
-* JWT authentication
-* Password hashing with bcrypt
+- 🔒 JWT token rotation with access and refresh tokens
+- 🛡️ Comprehensive security headers using Helmet
+- 🔄 Rate limiting for API protection
+- 🚫 CORS protection with whitelist
+- 🧹 MongoDB sanitization
+- 🛡️ HTTP Parameter Pollution protection
+- 🔐 Password hashing with bcrypt
+- 🔒 Secure cookie settings
+- 🚫 XSS protection
+- 🔒 Content Security Policy
+- 🛡️ Strict CORS configuration
 
 ## AWS Infrastructure
 
@@ -176,7 +187,7 @@ const instanceId = await deployEC2();
 ```
 
 ## Error Handling
-The application includes a centralized error handling system with custom AppError class.
+The application includes a centralized error handling system with custom AppError class and detailed error messages.
 
 ## API Documentation
 The API documentation is available at `/api-docs` when running the application in development mode. The documentation includes:
@@ -185,6 +196,8 @@ The API documentation is available at `/api-docs` when running the application i
 - Request/response schemas
 - Authentication requirements
 - Example requests and responses
+- Security requirements
+- Rate limiting information
 
 To access the documentation:
 1. Start the application in development mode

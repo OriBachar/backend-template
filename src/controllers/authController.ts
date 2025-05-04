@@ -1,7 +1,6 @@
 import { RequestHandler } from 'express';
-import { registerUser, authenticateUser, setAuthCookies } from '../services/authService';
+import { registerUser, authenticateUser, setAuthCookies, refreshTokens } from '../services/authService';
 import { asyncHandler } from '../utils/asyncHandler';
-import { AppError } from '../types/error';
 
 export const register: RequestHandler = asyncHandler(async (req, res) => {
     const user = await registerUser(req.body.email, req.body.password);
@@ -18,5 +17,14 @@ export const login: RequestHandler = asyncHandler(async (req, res) => {
     res.status(200).json({ 
         status: 'success',
         message: 'Logged in successfully'
+    });
+});
+
+export const refresh: RequestHandler = asyncHandler(async (req, res) => {
+    const tokens = await refreshTokens(req.body.refreshToken);
+    setAuthCookies(res, tokens);
+    res.status(200).json({ 
+        status: 'success',
+        message: 'Tokens refreshed successfully'
     });
 });

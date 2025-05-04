@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { register, login } from '../controllers/authController';
-import { validateRegister, validateLogin } from '../middleware/validators'
+import { register, login, refresh } from '../controllers/authController';
+import { validateRegister, validateLogin, validateRefresh } from '../middleware/validators'
 
 const router = Router();
 
@@ -106,5 +106,42 @@ router.post('/register', validateRegister, register);
  *         description: Invalid credentials
  */
 router.post('/login', validateLogin, login);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh JWT tokens
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: The refresh token received during login
+ *     responses:
+ *       200:
+ *         description: Tokens successfully refreshed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Tokens refreshed successfully
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh', validateRefresh, refresh);
 
 export default router;
