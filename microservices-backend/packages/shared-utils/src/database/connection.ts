@@ -11,10 +11,17 @@ export interface DatabaseConfig {
 
 export const connectDB = async (config: DatabaseConfig, serviceName: string, attempt = 1): Promise<void> => {
     try {
-        const uri = config.uri.endsWith(config.dbName) 
-            ? config.uri 
-            : `${config.uri}/${config.dbName}`;
-            
+        // If URI already contains database and auth parameters, use it as-is
+        // Otherwise, construct the proper URI
+        let uri = config.uri;
+        
+        // Check if URI already contains database name and auth parameters
+        if (!uri.includes('?') && !uri.includes(config.dbName)) {
+            // Simple URI without database, append database name
+            uri = uri.endsWith('/') ? `${uri}${config.dbName}` : `${uri}/${config.dbName}`;
+        }
+        
+        console.log(`🔗 ${serviceName}: Attempting MongoDB connection...`);
         await mongoose.connect(uri);
         console.log(`🔗 ${serviceName}: MongoDB connected successfully`);
     } catch (error) {

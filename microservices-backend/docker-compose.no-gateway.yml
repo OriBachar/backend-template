@@ -1,0 +1,129 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: microservices-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: backend-template
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - microservices-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+    container_name: microservices-auth
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - AUTH_SERVICE_PORT=3001
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/backend-template?authSource=admin
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - JWT_ACCESS_TOKEN_EXPIRY=15m
+      - JWT_REFRESH_TOKEN_EXPIRY=7d
+      - CORS_WHITELIST=http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # User Service  
+  user-service:
+    build:
+      context: .
+      dockerfile: ./services/user-service/Dockerfile
+    container_name: microservices-user
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - USER_SERVICE_PORT=3002
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/backend-template?authSource=admin
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - JWT_ACCESS_TOKEN_EXPIRY=15m
+      - JWT_REFRESH_TOKEN_EXPIRY=7d
+      - CORS_WHITELIST=http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # AWS Service
+  aws-service:
+    build:
+      context: .
+      dockerfile: ./services/aws-service/Dockerfile
+    container_name: microservices-aws
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - AWS_SERVICE_PORT=3003
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/backend-template?authSource=admin
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - CORS_WHITELIST=http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
+      # AWS Configuration (replace with your actual values or use LocalStack)
+      - AWS_ACCESS_KEY_ID=your_aws_access_key
+      - AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+      - AWS_REGION=us-east-1
+      - AWS_S3_BUCKET=your-s3-bucket
+      - AWS_EC2_IMAGE_ID=ami-0abcdef1234567890
+      - AWS_EC2_INSTANCE_TYPE=t2.micro
+      - AWS_EC2_MIN_COUNT=1
+      - AWS_EC2_MAX_COUNT=1
+      - AWS_EC2_KEY_NAME=your-key-name
+      - AWS_EC2_SECURITY_GROUP_IDS=sg-12345678
+      - GITHUB_REPO_URL=https://github.com/your-username/backend-template
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mongodb_data:
+
+networks:
+  microservices-network:
+    driver: bridge 

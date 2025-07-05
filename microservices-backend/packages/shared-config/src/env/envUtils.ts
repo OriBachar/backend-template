@@ -45,6 +45,17 @@ export const getEnvBoolean = (key: string, defaultValue = false): boolean => {
 export const createServiceConfig = (serviceName: string, defaultPort: number) => {
     const envPrefix = serviceName.toUpperCase().replace('-', '_');
     
+    // Get MongoDB URI - required
+    const mongoUri = getEnv('MONGODB_URI', true);
+    
+    // Extract database name from URI if not provided separately
+    let dbName = getEnv('DB_NAME', false);
+    if (!dbName) {
+        // Try to extract database name from URI
+        const uriMatch = mongoUri.match(/\/([^/?]+)(\?|$)/);
+        dbName = uriMatch ? uriMatch[1] : 'backend-template';
+    }
+    
     return {
         server: {
             port: getEnvNumber(`${envPrefix}_PORT`, defaultPort),
@@ -54,8 +65,8 @@ export const createServiceConfig = (serviceName: string, defaultPort: number) =>
             whitelist: getEnvArray('CORS_WHITELIST', ',', ['http://localhost:3000'])
         },
         mongodb: {
-            uri: getEnv('MONGODB_URI', true),
-            dbName: getEnv('DB_NAME', true)
+            uri: mongoUri,
+            dbName: dbName
         },
         jwt: {
             secret: getEnv('JWT_SECRET', true),
