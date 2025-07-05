@@ -16,10 +16,9 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/types": ["./packages/shared-types/src"],
-      "@shared/utils": ["./packages/shared-utils/src"],
-      "@shared/events": ["./packages/shared-events/src"],
-      "@shared/config": ["./packages/shared-config/src"]
+      "@microservices-backend/shared-types": ["./packages/shared-types/dist"],
+      "@microservices-backend/shared-utils": ["./packages/shared-utils/dist"],
+      "@microservices-backend/shared-config": ["./packages/shared-config/dist"]
     },
     "typeRoots": ["./node_modules/@types"],
     "resolveJsonModule": true
