@@ -4,6 +4,16 @@ import { validateRegister, validateLogin, validateRefresh } from '../middleware/
 
 const router = Router();
 
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'auth-service',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 router.post('/auth/register', validateRegister, register);
 
 router.post('/auth/login', validateLogin, login);
