@@ -1,0 +1,26 @@
+{
+  "name": "@microservices-backend/shared-types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for microservices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.0",
+    "zod": "^3.24.1",
+    "bcrypt": "^5.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.9.3",
+    "@types/bcrypt": "^5.0.2"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+} 

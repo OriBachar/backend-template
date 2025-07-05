@@ -1,0 +1,24 @@
+{
+  "name": "@microservices-backend/shared-config",
+  "version": "1.0.0",
+  "description": "Shared configuration utilities for microservices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "@microservices-backend/shared-types": "^1.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.9.3"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+} 
