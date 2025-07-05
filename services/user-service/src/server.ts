@@ -43,7 +43,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/v1', userRoutes);
+app.use('/', userRoutes);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);

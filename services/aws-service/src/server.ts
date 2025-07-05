@@ -42,7 +42,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/v1', awsRoutes);
+app.use('/', awsRoutes);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);

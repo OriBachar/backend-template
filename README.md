@@ -1,204 +1,111 @@
-# Backend Template
+# Microservices Backend Platform
 
-## Overview
-This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes robust authentication, database interactions, AWS service integration, and comprehensive security features.
+This project transforms a monolithic backend into a microservices architecture using industry-standard practices.
 
-## Features
-- 🔒 Secure authentication with JWT token rotation
-- 🛡️ Advanced input validation with Zod
-- 🗄️ MongoDB integration with Mongoose
-- ☁️ AWS integration ready (S3, EC2)
-- 🔄 Rate limiting and CORS protection
-- 🚦 Comprehensive error handling middleware
-- 📝 Request logging with Morgan
-- 🐳 Docker and Docker Compose support for easy deployment
-- 📚 Swagger API documentation
-- 🔐 Advanced security headers and CORS settings
-- 🔄 JWT token rotation for enhanced security
-- 🛡️ HTTP Parameter Pollution protection
-- 🧹 MongoDB sanitization
-- 🔒 Password hashing with bcrypt
-- 🚫 Rate limiting for API protection
+## 🏗️ Architecture Overview
 
-## Prerequisites
-- **Node.js** (v16 or later recommended)
-- **npm** or **yarn**
-- **MongoDB** (or the relevant database)
-- **AWS account** (if AWS services are used)
-
-## Installation
-1. Install dependencies:
-   ```sh
-   npm install
-   ```
-2. Configure environment variables:
-   ```env
-   PORT=3000
-   NODE_ENV=development
-   MONGODB_URI=your_mongodb_uri
-   DB_NAME=your_database_name
-   JWT_SECRET=your_jwt_secret
-   
-   # Optional AWS Configuration
-   AWS_ACCESS_KEY_ID=your_aws_access_key
-   AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-   AWS_REGION=your_aws_region
-   AWS_S3_BUCKET=your_s3_bucket
-   
-   # CORS Configuration
-   CORS_WHITELIST=http://localhost:3000,https://yourdomain.com
-
-   # Github repo url
-   GITHUB_REPO_URL=your_github_repo_url
-   ```
-
-## Running the Application
-### Development Mode
-```sh
-npm run dev
+```
+microservices-backend/
+├── services/                # Microservices
+│   ├── auth-service/        # Authentication & JWT management
+│   ├── user-service/        # User profile management  
+│   ├── aws-service/         # AWS S3/EC2 operations
+│   └── api-gateway/         # API Gateway & routing
+├── packages/                # Shared NPM packages
+│   ├── shared-types/        # TypeScript interfaces & types
+│   ├── shared-utils/        # Utility functions
+│   ├── shared-events/       # Event system (Redis)
+│   └── shared-config/       # Configuration utilities
 ```
 
-### Building
-```sh
-npm run build
-```
+## 📦 Shared Packages
 
-### Production
-```sh
-npm start
-```
+### @microservices-backend/shared-types
+Contains all TypeScript interfaces and types:
+- **Auth types**: Login, register, JWT schemas
+- **User types**: User interface, roles, enums
+- **AWS types**: S3 upload, EC2 instance parameters
+- **Common types**: API responses, errors, pagination
 
-## Docker Setup
-The application can be run using Docker and Docker Compose for easy deployment and development.
+### @microservices-backend/shared-utils  
+Contains utility functions:
+- **Async handler**: Express async error handling
+- **Validation utilities**: Zod validation helpers
+- **Crypto utilities**: JWT, bcrypt helpers (planned)
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Docker
-- Docker Compose
+- Node.js 18+
+- Docker & Docker Compose
+- MongoDB (via Docker)
+- Redis (via Docker)
 
-### Running with Docker Compose
-1. Build and start all services:
-   ```sh
-   docker-compose up --build
+### Installation
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   npm run bootstrap
    ```
 
-2. Run in detached mode (in the background):
-   ```sh
-   docker-compose up -d --build
+2. **Build shared packages:**
+   ```bash
+   npm run build
    ```
 
-3. Stop the services:
-   ```sh
-   docker-compose down
+3. **Start development environment:**
+   ```bash
+   npm run dev
    ```
 
-4. View logs:
-   ```sh
-   docker-compose logs -f
-   ```
+## 🔧 Development Commands
 
-The application will be available at `http://localhost:3000`, and MongoDB will be accessible at `mongodb://localhost:27017`.
+```bash
+# Install all dependencies
+npm run bootstrap
 
-### Environment Variables
-The following environment variables are automatically configured in the Docker environment:
-- `NODE_ENV=production`
-- `MONGODB_URI=mongodb://mongodb:27017/backend-template`
+# Build all packages and services
+npm run build
 
-Additional environment variables can be added to the `docker-compose.yml` file as needed.
+# Start development environment
+npm run dev
 
-## API Endpoints
-| Method | Endpoint | Description |
-|--------|---------|-------------|
-| POST   | `/auth/login` | User login with JWT token rotation |
-| POST   | `/auth/register` | User registration with password hashing |
-| POST   | `/auth/refresh` | Refresh JWT tokens |
+# Stop all services
+npm run stop
 
-## Project Structure
-```
-/src
-  ├── config/           # Configuration files (AWS, database, environment variables)
-  ├── controllers/      # Handles incoming requests and calls services
-  ├── data-access/      # Database repositories and queries
-  ├── middleware/       # Authentication, validation, and error handling
-  ├── models/          # Database models
-  ├── routes/          # Express routes definitions
-  ├── services/        # Business logic services
-  ├── types/           # Type definitions
-  ├── utils/           # Utility functions and helpers
+# View logs
+npm run logs
+
+# Clean build artifacts
+npm run clean
 ```
 
-## Security Features
-- 🔒 JWT token rotation with access and refresh tokens
-- 🛡️ Comprehensive security headers using Helmet
-- 🔄 Rate limiting for API protection
-- 🚫 CORS protection with whitelist
-- 🧹 MongoDB sanitization
-- 🛡️ HTTP Parameter Pollution protection
-- 🔐 Password hashing with bcrypt
-- 🔒 Secure cookie settings
-- 🚫 XSS protection
-- 🔒 Content Security Policy
-- 🛡️ Strict CORS configuration
+## 🎯 Next Steps
 
-## AWS Infrastructure
+1. **Extract Auth Service** - Move authentication logic to dedicated service
+2. **Extract User Service** - Move user management to dedicated service
+3. **Extract AWS Service** - Move AWS operations to dedicated service  
+4. **Create API Gateway** - Set up routing and middleware
+5. **Docker Compose** - Container orchestration for development
+6. **Testing** - Integration and E2E tests
 
-### S3 Service
+## 🛠️ Technology Stack
 
-The application uses Amazon S3 for file storage and management. The following operations are supported:
+- **Framework**: Express.js + TypeScript
+- **Database**: MongoDB with Mongoose
+- **Message Queue**: Redis
+- **Authentication**: JWT with rotation
+- **Validation**: Zod
+- **Containerization**: Docker + Docker Compose
+- **Monorepo**: NPM Workspaces
 
-- File upload with public/private access control
-- File deletion
-- Generating signed URLs for temporary file access
-- Bucket management
 
-Example usage:
+## 🔒 Security Features
 
-```typescript
-import { uploadToS3, getSignedUrl } from "./awsService";
-
-// Upload file
-const fileUrl = await uploadToS3({
-  file: fileBuffer,
-  fileName: "example.jpg",
-  contentType: "image/jpeg",
-  bucketName: "your-bucket"
-});
-
-// Generate temporary access URL
-const signedUrl = await getSignedUrl("your-bucket", "example.jpg", 3600);
-```
-
-### EC2 Deployment
-
-The application can be automatically deployed to Amazon EC2 instances. The deployment process includes:
-
-- Instance launch with customizable configurations
-- Automatic setup of Node.js environment
-- Application code deployment
-- Environment configuration
-- Instance management (start/stop/status monitoring)
-
-Example deployment:
-
-```typescript
-import { deployEC2 } from "./script/deployEC2";
-
-// Launch new EC2 instance with application
-const instanceId = await deployEC2();
-```
-
-## Error Handling
-The application includes a centralized error handling system with custom AppError class and detailed error messages.
-
-## API Documentation
-The API documentation is available at `/api-docs` when running the application in development mode. The documentation includes:
-
-- Detailed endpoint descriptions
-- Request/response schemas
-- Authentication requirements
-- Example requests and responses
-- Security requirements
-- Rate limiting information
-
-To access the documentation:
-1. Start the application in development mode
-2. Open your browser and navigate to `http://localhost:3000/api-docs`
+- JWT token rotation
+- Input validation with Zod
+- Request rate limiting  
+- CORS protection
+- Helmet security headers
+- MongoDB sanitization

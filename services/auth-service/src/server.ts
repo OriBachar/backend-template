@@ -41,7 +41,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/v1', authRoutes);
+app.use('/', authRoutes);
 
 // Error handling
 app.use(errorHandler);

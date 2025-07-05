@@ -7,17 +7,19 @@ const router = Router();
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'healthy',
+    status: 'success',
     service: 'auth-service',
+    message: 'Auth service is healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    environment: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3001
   });
 });
 
-router.post('/auth/register', validateRegister, register);
+router.post('/register', validateRegister, register);
 
-router.post('/auth/login', validateLogin, login);
+router.post('/login', validateLogin, login);
 
-router.post('/auth/refresh', validateRefresh, refresh);
+router.post('/refresh', validateRefresh, refresh);
 
 export default router; 

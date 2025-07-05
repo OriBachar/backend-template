@@ -1,47 +1,224 @@
-version: '3.8'
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017
-      - DB_NAME=backend-template
-      - JWT_SECRET=development_jwt_secret_key_123
-      - CORS_WHITELIST=http://localhost:3000
-      - GITHUB_REPO_URL=https://github.com/your-username/backend-template
-      - AWS_ACCESS_KEY_ID=your_aws_access_key
-      - AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-      - AWS_REGION=your_aws_region
-      - AWS_S3_BUCKET=your_s3_bucket
-      - AWS_EC2_IMAGE_ID=your_aws_ec2_image_id
-      - AWS_EC2_INSTANCE_TYPE=your_aws_ec2_instance_type
-      - AWS_EC2_MIN_COUNT=1
-      - AWS_EC2_MAX_COUNT=1
-      - AWS_EC2_KEY_NAME=your_aws_ec2_key_name
-      - AWS_EC2_SECURITY_GROUP_IDS=your_aws_ec2_security_grouo_ids
-    depends_on:
-      - mongodb
-    networks:
-      - app-network
-
+  # MongoDB Database
   mongodb:
+    env_file:
+      - .env
     image: mongo:latest
+    container_name: microservices-mongodb
+    restart: unless-stopped
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-backend-template}
     volumes:
       - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - app-network
+      - microservices-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-networks:
-  app-network:
-    driver: bridge
+  # Auth Service
+  auth-service:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+    container_name: microservices-auth
+    restart: unless-stopped
+    # Remove external port binding - only accessible through gateway
+    expose:
+      - "3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT:-3001}
+      - MONGODB_URI=mongodb://${MONGODB_USERNAME:-admin}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE:-backend-template}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TOKEN_EXPIRY=${JWT_ACCESS_TOKEN_EXPIRY:-15m}
+      - JWT_REFRESH_TOKEN_EXPIRY=${JWT_REFRESH_TOKEN_EXPIRY:-7d}
+      - CORS_WHITELIST=${CORS_WHITELIST:-http://localhost:3000,http://localhost:80,http://localhost:443}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # User Service  
+  user-service:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./services/user-service/Dockerfile
+    container_name: microservices-user
+    restart: unless-stopped
+    # Remove external port binding - only accessible through gateway
+    expose:
+      - "3002"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - USER_SERVICE_PORT=${USER_SERVICE_PORT:-3002}
+      - MONGODB_URI=mongodb://${MONGODB_USERNAME:-admin}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE:-backend-template}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TOKEN_EXPIRY=${JWT_ACCESS_TOKEN_EXPIRY:-15m}
+      - JWT_REFRESH_TOKEN_EXPIRY=${JWT_REFRESH_TOKEN_EXPIRY:-7d}
+      - CORS_WHITELIST=${CORS_WHITELIST:-http://localhost:3000,http://localhost:80,http://localhost:443}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # AWS Service
+  aws-service:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./services/aws-service/Dockerfile
+    container_name: microservices-aws
+    restart: unless-stopped
+    # Remove external port binding - only accessible through gateway
+    expose:
+      - "3003"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - AWS_SERVICE_PORT=${AWS_SERVICE_PORT:-3003}
+      - MONGODB_URI=mongodb://${MONGODB_USERNAME:-admin}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE:-backend-template}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_WHITELIST=${CORS_WHITELIST:-http://localhost:3000,http://localhost:80,http://localhost:443}
+      # AWS Configuration (replace with your actual values or use LocalStack)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_EC2_IMAGE_ID=${AWS_EC2_IMAGE_ID}
+      - AWS_EC2_INSTANCE_TYPE=${AWS_EC2_INSTANCE_TYPE:-t2.micro}
+      - AWS_EC2_MIN_COUNT=${AWS_EC2_MIN_COUNT:-1}
+      - AWS_EC2_MAX_COUNT=${AWS_EC2_MAX_COUNT:-1}
+      - AWS_EC2_KEY_NAME=${AWS_EC2_KEY_NAME}
+      - AWS_EC2_SECURITY_GROUP_IDS=${AWS_EC2_SECURITY_GROUP_IDS}
+      - GITHUB_REPO_URL=${GITHUB_REPO_URL}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API Gateway (Nginx)
+  api-gateway:
+    image: nginx:alpine
+    container_name: microservices-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Temporarily commented out due to Docker Desktop/WSL mount issue
+      # - ./nginx/logs:/var/log/nginx
+      # For SSL certificates (if needed)
+      # - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      aws-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "com.microservices.description=API Gateway"
+      - "com.microservices.service=gateway"
+
+  redis:
+    env_file:
+      - .env
+    image: redis:7-alpine
+    container_name: microservices-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+
+  # Optional: Monitoring with Prometheus
+  prometheus:
+    env_file:
+      - .env
+    image: prom/prometheus:latest
+    container_name: microservices-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - microservices-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    profiles:
+      - monitoring
+
 
 volumes:
-  mongodb_data: 
+  mongodb_data:
+  redis_data:
+  prometheus_data:
+
+networks:
+  microservices-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 
