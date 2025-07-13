@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { IUser, UserRole } from '../types/user';
-import bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 
 const userSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, unique: true },
@@ -16,9 +16,7 @@ const userSchema = new mongoose.Schema<IUser>({
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 
-    const salt = await bcrypt.genSalt(10);
-
-    this.password = await bcrypt.hash(this.password, salt);
+    this.password = await argon2.hash(this.password);
 
     next();
 });

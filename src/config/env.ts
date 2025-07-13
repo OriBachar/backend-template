@@ -18,9 +18,15 @@ export const config = {
         env: getEnv('NODE_ENV') || 'development',
         whitelist: getEnv('CORS_WHITELIST') ? getEnv('CORS_WHITELIST').split(',') : []
     },
-    mongodb: {
-        uri: getEnv('MONGODB_URI', true),
-        dbName: getEnv('DB_NAME', true)
+    database: {
+        type: getEnv('DATABASE_TYPE') || 'mongodb', // 'mongodb' or 'postgresql'
+        mongodb: {
+            uri: getEnv('MONGODB_URI'),
+            dbName: getEnv('DB_NAME')
+        },
+        postgresql: {
+            url: getEnv('DATABASE_URL')
+        }
     },
     jwt: {
         secret: getEnv('JWT_SECRET', true)

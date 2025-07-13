@@ -1,13 +1,16 @@
-import { userRepository } from '../data-access/index';
+import { UserRepositoryFactory } from '../data-access/repositories/userRepositoryFactory';
 import { IUser, UserRole } from '../types/user';
 import { AppError } from '../types/error';
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
-import bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
+
+// Get the appropriate repository based on database configuration
+const userRepository = UserRepositoryFactory.create();
 
 export const registerUser = async (email: string, password: string): Promise<IUser> => {
     const userExists = await userRepository.exists(email);
@@ -29,19 +32,22 @@ export const authenticateUser = async (email: string, password: string): Promise
         throw new AppError('Invalid credentials', 401);
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await argon2.verify(password, user.password);
     if (!isPasswordValid) {
         throw new AppError('Invalid credentials', 401);
     }
 
+    // Handle different user ID field names for MongoDB vs PostgreSQL
+    const userId = user._id || user.id;
+
     const accessToken = jwt.sign(
-        { userId: user._id, email: user.email, type: 'access' },
+        { userId, email: user.email, type: 'access' },
         config.jwt.secret,
         { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
 
     const refreshToken = jwt.sign(
-        { userId: user._id, email: user.email, type: 'refresh' },
+        { userId, email: user.email, type: 'refresh' },
         config.jwt.secret,
         { expiresIn: REFRESH_TOKEN_EXPIRY }
     );
@@ -62,14 +68,17 @@ export const refreshTokens = async (refreshToken: string): Promise<{ accessToken
             throw new AppError('User not found', 404);
         }
 
+        // Handle different user ID field names for MongoDB vs PostgreSQL
+        const userId = user._id || user.id;
+
         const newAccessToken = jwt.sign(
-            { userId: user._id, email: user.email, type: 'access' },
+            { userId, email: user.email, type: 'access' },
             config.jwt.secret,
             { expiresIn: ACCESS_TOKEN_EXPIRY }
         );
 
         const newRefreshToken = jwt.sign(
-            { userId: user._id, email: user.email, type: 'refresh' },
+            { userId, email: user.email, type: 'refresh' },
             config.jwt.secret,
             { expiresIn: REFRESH_TOKEN_EXPIRY }
         );
