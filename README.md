@@ -1,12 +1,13 @@
 # Backend Template
 
 ## Overview
-This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes robust authentication, **multi-database support** (MongoDB & PostgreSQL), **advanced security features**, AWS service integration, and comprehensive error handling.
+This project is a Node.js backend written in TypeScript, designed with a modular architecture for scalability and maintainability. It includes robust authentication, **multi-database support** (MongoDB & PostgreSQL), **advanced user management** with roles and permissions, **enhanced security features**, AWS service integration, and comprehensive error handling.
 
 ## Features
 - 🔒 **Secure authentication** with JWT token rotation
 - 🛡️ **Advanced input validation** with Zod
 - 🗄️ **Multi-database support**: MongoDB (Mongoose) + PostgreSQL (Prisma)
+- 👥 **Advanced user management** with roles, permissions, and profiles
 - 🔐 **Enhanced security** with Argon2 password hashing
 - ☁️ **AWS integration** ready (S3, EC2)
 - 🔄 **Rate limiting** and CORS protection
@@ -20,7 +21,8 @@ This project is a Node.js backend written in TypeScript, designed with a modular
 - 🧹 **MongoDB sanitization**
 - 🚫 **Rate limiting** for API protection
 - 🏗️ **Type-safe database operations** with Prisma
-- 🔄 **Database factory pattern** for easy switching
+- 🔄 **Repository factory pattern** for database-agnostic operations
+- 🏗️ **Modular repository architecture** with organized folder structure
 
 ## Prerequisites
 - **Node.js** (v16 or later recommended)
@@ -70,6 +72,10 @@ This project is a Node.js backend written in TypeScript, designed with a modular
 1. Install MongoDB locally or use MongoDB Atlas
 2. Set `DATABASE_TYPE=mongodb` in your `.env`
 3. Configure `MONGODB_URI` and `DB_NAME`
+4. Seed the database:
+   ```bash
+   npm run db:seed:mongo
+   ```
 
 ### PostgreSQL Setup
 1. **Install PostgreSQL**:
@@ -93,7 +99,7 @@ This project is a Node.js backend written in TypeScript, designed with a modular
    npm run db:push
    
    # Seed with initial data
-   npm run db:seed
+   npm run db:seed:postgresql
    ```
 
 4. **Set Environment**:
@@ -130,8 +136,10 @@ npm run db:push
 # Create and run migrations
 npm run db:migrate
 
-# Seed database
-npm run db:seed
+# Seed databases
+npm run db:seed:mongo      # MongoDB seeding
+npm run db:seed:postgresql # PostgreSQL seeding
+npm run db:seed            # Default: PostgreSQL seeding
 
 # Open Prisma Studio
 npm run db:studio
@@ -170,34 +178,223 @@ The application will be available at `http://localhost:3000`.
 ### Environment Variables
 The following environment variables are automatically configured in the Docker environment:
 - `NODE_ENV=production`
+- `DATABASE_TYPE=mongodb` (or `postgresql`)
 - `MONGODB_URI=mongodb://mongodb:27017/backend-template`
+- `POSTGRESQL_URL=postgresql://postgres:postgres@postgres:5432/backend-template`
 
 Additional environment variables can be added to the `docker-compose.yml` file as needed.
 
 ## API Endpoints
+
+### Authentication
 | Method | Endpoint | Description |
 |--------|---------|-------------|
 | POST   | `/api/auth/login` | User login with JWT token rotation |
 | POST   | `/api/auth/register` | User registration with Argon2 password hashing |
 | POST   | `/api/auth/refresh` | Refresh JWT tokens |
 
+### Roles Management
+| Method | Endpoint | Description |
+|--------|---------|-------------|
+| GET    | `/api/roles` | Get all roles |
+| POST   | `/api/roles` | Create a new role |
+| GET    | `/api/roles/:id` | Get role by ID |
+| GET    | `/api/roles/name/:name` | Get role by name |
+| PUT    | `/api/roles/:id` | Update role by ID |
+| DELETE | `/api/roles/:id` | Delete role by ID |
+
+### Permissions Management
+| Method | Endpoint | Description |
+|--------|---------|-------------|
+| GET    | `/api/permissions` | Get all permissions |
+| POST   | `/api/permissions` | Create a new permission |
+| GET    | `/api/permissions/:id` | Get permission by ID |
+| GET    | `/api/permissions/name/:name` | Get permission by name |
+| GET    | `/api/permissions/resource/:resource` | Get permissions by resource |
+| PUT    | `/api/permissions/:id` | Update permission by ID |
+| DELETE | `/api/permissions/:id` | Delete permission by ID |
+
+### User Profiles Management
+| Method | Endpoint | Description |
+|--------|---------|-------------|
+| GET    | `/api/profiles` | Get all profiles |
+| POST   | `/api/profiles` | Create a new profile |
+| GET    | `/api/profiles/:id` | Get profile by ID |
+| GET    | `/api/profiles/user/:userId` | Get profile by user ID |
+| PUT    | `/api/profiles/:id` | Update profile by ID |
+| PUT    | `/api/profiles/user/:userId` | Update profile by user ID |
+| DELETE | `/api/profiles/:id` | Delete profile by ID |
+| DELETE | `/api/profiles/user/:userId` | Delete profile by user ID |
+
+## Advanced User Management
+
+### Features
+- 👥 **User Roles**: admin, user, moderator, premium
+- 🔐 **Permissions**: Granular permissions for resources and actions
+- 👤 **User Profiles**: Extended user information and preferences
+- 📊 **Audit Logs**: Track user actions and system events
+- 🔄 **Sessions**: Manage user sessions and tokens
+
+### Data Models
+- **Users**: Core user authentication and role management
+- **Roles**: Define user roles and their descriptions
+- **Permissions**: Granular permissions for resources and actions
+- **Profiles**: Extended user information and preferences
+- **Sessions**: User session management
+- **Audit Logs**: System activity tracking
+
+### Sample Data
+After seeding, you'll have:
+- **Admin User**: admin@example.com / admin123
+- **Regular User**: user@example.com / user123
+- **Roles**: admin, user, moderator
+- **Permissions**: user:read, user:write, admin:full, profile:read, profile:write
+
+### API Usage Examples
+
+#### Authentication
+```bash
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "admin123"}'
+
+# Register
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "newuser@example.com", "password": "password123"}'
+```
+
+#### Roles Management
+```bash
+# Get all roles
+curl -X GET http://localhost:3000/api/roles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a new role
+curl -X POST http://localhost:3000/api/roles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"name": "editor", "description": "Content editor role"}'
+
+# Update a role
+curl -X PUT http://localhost:3000/api/roles/ROLE_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"description": "Updated description"}'
+```
+
+#### Permissions Management
+```bash
+# Get all permissions
+curl -X GET http://localhost:3000/api/permissions \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a new permission
+curl -X POST http://localhost:3000/api/permissions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"name": "content:edit", "description": "Edit content", "resource": "content", "action": "edit"}'
+
+# Get permissions by resource
+curl -X GET http://localhost:3000/api/permissions/resource/user \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### User Profiles Management
+```bash
+# Get all profiles
+curl -X GET http://localhost:3000/api/profiles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a profile
+curl -X POST http://localhost:3000/api/profiles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"userId": "USER_ID", "firstName": "John", "lastName": "Doe", "bio": "Software developer"}'
+
+# Update profile by user ID
+curl -X PUT http://localhost:3000/api/profiles/user/USER_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"firstName": "Jane", "bio": "Updated bio"}'
+```
+
+### Response Format
+All API endpoints return a consistent response format:
+```json
+{
+  "success": true,
+  "data": {
+    // Response data here
+  },
+  "message": "Operation completed successfully"
+}
+```
+
+### Error Handling
+The API provides detailed error responses:
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Error description",
+    "statusCode": 400,
+    "isOperational": true
+  }
+}
+```
+
 ## Project Structure
 ```
 /src
   ├── config/           # Configuration files (AWS, database, environment variables)
   ├── controllers/      # Handles incoming requests and calls services
+  │   ├── authController.ts
+  │   ├── roleController.ts
+  │   ├── permissionController.ts
+  │   └── profileController.ts
   ├── data-access/      # Database repositories and queries
   │   └── repositories/
-  │       ├── userRepository.ts           # MongoDB repository
-  │       ├── postgresqlUserRepository.ts # PostgreSQL repository
-  │       └── userRepositoryFactory.ts    # Repository factory
+  │       ├── factories/           # Repository factory pattern
+  │       │   ├── userRepositoryFactory.ts
+  │       │   ├── roleRepositoryFactory.ts
+  │       │   ├── permissionRepositoryFactory.ts
+  │       │   └── profileRepositoryFactory.ts
+  │       ├── mongo/              # MongoDB implementations
+  │       │   ├── baseRepository.ts
+  │       │   ├── userRepository.ts
+  │       │   ├── roleRepository.ts
+  │       │   ├── permissionRepository.ts
+  │       │   └── profileRepository.ts
+  │       └── postgresql/         # PostgreSQL implementations
+  │           ├── postgresqlUserRepository.ts
+  │           ├── postgresqlRoleRepository.ts
+  │           ├── postgresqlPermissionRepository.ts
+  │           └── postgresqlProfileRepository.ts
   ├── middleware/       # Authentication, validation, and error handling
   ├── models/          # Database models (MongoDB)
+  │   ├── User.ts
+  │   ├── Role.ts
+  │   ├── Permission.ts
+  │   └── Profile.ts
   ├── routes/          # Express routes definitions
+  │   ├── authRoutes.ts
+  │   ├── roleRoutes.ts
+  │   ├── permissionRoutes.ts
+  │   ├── profileRoutes.ts
+  │   └── index.ts
   ├── services/        # Business logic services
+  │   ├── authService.ts
+  │   ├── roleService.ts
+  │   ├── permissionService.ts
+  │   ├── profileService.ts
+  │   └── awsService.ts
   ├── types/           # Type definitions
   ├── utils/           # Utility functions and helpers
   └── script/          # Database seeding scripts
+      ├── seed.mongo.ts
+      └── seed.postgresql.ts
 
 /prisma
   └── schema.prisma    # PostgreSQL schema (Prisma)
@@ -213,6 +410,7 @@ The application supports both MongoDB and PostgreSQL with easy switching:
 - ✅ Flexible schema
 - ✅ Built-in aggregation
 - ✅ Mongoose ODM
+- ✅ Advanced user management models
 
 #### PostgreSQL (Prisma)
 - ✅ Relational database
@@ -221,6 +419,18 @@ The application supports both MongoDB and PostgreSQL with easy switching:
 - ✅ Prisma ORM
 - ✅ Type safety
 - ✅ Advanced relationships
+- ✅ Advanced user management with foreign keys
+
+### Repository Factory Pattern
+The application uses a factory pattern for database-agnostic operations:
+
+```typescript
+// Get the appropriate repository based on database type
+const userRepository = UserRepositoryFactory.create();
+const roleRepository = RoleRepositoryFactory.create();
+const permissionRepository = PermissionRepositoryFactory.create();
+const profileRepository = ProfileRepositoryFactory.create();
+```
 
 ### Database Switching
 Change your `.env` file to switch databases:
@@ -248,122 +458,94 @@ DATABASE_URL=postgresql://username:password@localhost:5432/backend_template
 - 🚫 **XSS protection**
 - 🔒 **Content Security Policy**
 - 🛡️ **Strict CORS configuration**
-- 🏗️ **Type-safe database operations**
 
-## AWS Infrastructure
-
-### S3 Service
-The application uses Amazon S3 for file storage and management. The following operations are supported:
-
-- File upload with public/private access control
-- File deletion
-- Generating signed URLs for temporary file access
-- Bucket management
-
-Example usage:
-
-```typescript
-import { uploadToS3, getSignedUrl } from "./awsService";
-
-// Upload file
-const fileUrl = await uploadToS3({
-  file: fileBuffer,
-  fileName: "example.jpg",
-  contentType: "image/jpeg",
-  bucketName: "your-bucket"
-});
-
-// Generate temporary access URL
-const signedUrl = await getSignedUrl("your-bucket", "example.jpg", 3600);
-```
+## Deployment
 
 ### EC2 Deployment
-The application can be automatically deployed to Amazon EC2 instances. The deployment process includes:
-
-- Instance launch with customizable configurations
-- Automatic setup of Node.js environment
-- Application code deployment
-- Environment configuration
-- Instance management (start/stop/status monitoring)
-
-Example deployment:
+The application includes an EC2 deployment script that supports both databases:
 
 ```typescript
-import { deployEC2 } from "./script/deployEC2";
-
-// Launch new EC2 instance with application
-const instanceId = await deployEC2();
+// The deployEC2 script automatically sets the correct environment variables
+// based on your DATABASE_TYPE configuration
 ```
 
-## Error Handling
-The application includes a centralized error handling system with custom AppError class and detailed error messages.
+### Environment Variables for Deployment
+The deployment script automatically configures:
+- Database-specific environment variables
+- Conditional setup based on `DATABASE_TYPE`
+- Proper connection strings for both MongoDB and PostgreSQL
 
-## API Documentation
-The API documentation is available at `/api-docs` when running the application in development mode. The documentation includes:
+## Testing the API
 
-- Detailed endpoint descriptions
+### Swagger Documentation
+When running in development mode, you can access the interactive API documentation at:
+```
+http://localhost:3000/api-docs
+```
+
+This provides:
+- Complete API endpoint documentation
+- Interactive testing interface
 - Request/response schemas
 - Authentication requirements
 - Example requests and responses
-- Security requirements
-- Rate limiting information
 
-To access the documentation:
-1. Start the application in development mode
-2. Open your browser and navigate to `http://localhost:3000/api-docs`
-
-## Database Management
-
-### Prisma Studio
-View and edit your PostgreSQL database through Prisma Studio:
+### Testing with curl
+You can test the API endpoints using curl commands. First, authenticate to get a JWT token:
 
 ```bash
-npm run db:studio
+# Login and get token
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "admin123"}'
 ```
 
-This opens a web interface at `http://localhost:5555`
+Then use the returned token in subsequent requests:
 
-### Database Commands
 ```bash
-# Generate Prisma client
+# Test roles endpoint
+curl -X GET http://localhost:3000/api/roles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Testing with Postman
+1. Import the Swagger specification from `/api-docs`
+2. Set up environment variables for the base URL
+3. Use the authentication endpoints to get tokens
+4. Test all CRUD operations for roles, permissions, and profiles
+
+## Development Workflow
+
+### Adding New Features
+1. **Create Repository**: Add MongoDB and PostgreSQL implementations
+2. **Create Service**: Add business logic with validation
+3. **Create Controller**: Add request/response handling
+4. **Create Routes**: Add API endpoints with Swagger docs
+5. **Update Index**: Register new routes in `src/routes/index.ts`
+6. **Test**: Use Swagger UI or curl to test endpoints
+
+### Database Operations
+```bash
+# Switch between databases
+export DATABASE_TYPE=mongodb    # or postgresql
+
+# Seed databases
+npm run db:seed:mongo          # MongoDB
+npm run db:seed:postgresql     # PostgreSQL
+
+# Generate Prisma client (PostgreSQL)
 npm run db:generate
 
-# Push schema changes
+# Push schema changes (PostgreSQL)
 npm run db:push
-
-# Create and run migrations
-npm run db:migrate
-
-# Seed database
-npm run db:seed
-
-# Open Prisma Studio
-npm run db:studio
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Issues**
-   - Ensure your database is running
-   - Check connection strings in `.env`
-   - Verify database credentials
-
-2. **Prisma Issues**
-   - Run `npm run db:generate` after schema changes
-   - Use `npm run db:push` for development
-   - Use `npm run db:migrate` for production
-
-3. **TypeScript Errors**
-   - Run `npm run build` to check TypeScript
-   - Ensure Prisma client is generated: `npm run db:generate`
-
 ## Contributing
-When adding new models:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-1. Update `prisma/schema.prisma` (for PostgreSQL)
-2. Create corresponding repository in `src/data-access/repositories/`
-3. Add to repository factory
-4. Update seed script if needed
-5. Test with both databases
+## License
+This project is licensed under the MIT License.

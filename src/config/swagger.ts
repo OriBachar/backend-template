@@ -13,6 +13,7 @@ const options: swaggerJsdoc.Options = {
     servers: [
       {
         url: 'http://localhost:3000',
+        description: 'Development server',
       },
     ],
     components: {
@@ -26,9 +27,9 @@ const options: swaggerJsdoc.Options = {
     },
   },
   apis: [
-    process.env.NODE_ENV === 'production'
-      ? './dist/routes/*.js'
-      : './src/routes/*.ts'
+    './src/routes/*.ts',
+    './src/routes/**/*.ts',
+    './src/controllers/*.ts',
   ],
 };
 

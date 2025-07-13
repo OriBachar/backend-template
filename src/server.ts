@@ -9,7 +9,10 @@ import { setupSwagger } from './config/swagger';
 const app = express();
 
 if (config.server.env === 'development') {
+  console.log('Setting up Swagger in development mode...');
   setupSwagger(app);
+} else {
+  console.log('Swagger disabled in production mode');
 }
 
 app.use(middleware);
