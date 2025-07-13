@@ -1,6 +1,6 @@
-import { config } from '../../config/env';
-import { userRepository } from './userRepository';
-import { PostgreSQLUserRepository } from './postgresqlUserRepository';
+import { config } from '../../../config/env';
+import { userRepository } from '../mongo/userRepository';
+import { PostgreSQLUserRepository } from '../postgresql/postgresqlUserRepository';
 
 export interface IUserRepository {
     create(userData: any): Promise<any>;

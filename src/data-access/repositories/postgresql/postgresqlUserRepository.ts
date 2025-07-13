@@ -1,6 +1,6 @@
-import { prisma } from '../../config/database';
-import { IPostgreSQLUser, UserRole } from '../../types/user';
-import { AppError } from '../../types/error';
+import { prisma } from '../../../config/database';
+import { IPostgreSQLUser, UserRole } from '../../../types/user';
+import { AppError } from '../../../types/error';
 import * as argon2 from 'argon2';
 
 export class PostgreSQLUserRepository {
@@ -12,7 +12,8 @@ export class PostgreSQLUserRepository {
                 data: {
                     email: userData.email,
                     password: hashedPassword,
-                    role: userData.role as any
+                    role: userData.role as any,
+                    isActive: userData.isActive ?? true
                 }
             });
 
@@ -21,6 +22,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -45,6 +47,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -66,6 +69,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -93,6 +97,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -115,6 +120,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
@@ -135,6 +141,7 @@ export class PostgreSQLUserRepository {
                 email: user.email,
                 password: user.password,
                 role: user.role as UserRole,
+                isActive: user.isActive,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             }));

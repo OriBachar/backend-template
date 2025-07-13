@@ -1,7 +1,7 @@
-import { IUser } from '../../types/user';
-import { User } from '../../models/User';
-import { AppError } from '../../types/error';
-import { createRepository } from './baseRepository'
+import { IUser } from '../../../types/user';
+import { User } from '../../../models/User';
+import { AppError } from '../../../types/error';
+import { createRepository } from '../baseRepository'
 
 const baseUserRepository = createRepository<IUser>(User);
 

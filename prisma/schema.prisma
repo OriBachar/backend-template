@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,18 +10,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Core User Model
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  role      UserRole @default(USER)
+  role      UserRoleEnum @default(USER)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relationships
+  profile    Profile?
+  userRoles  UserRole[]
+  auditLogs  AuditLog[]
+  sessions   Session[]
 
   @@map("users")
 }
 
-enum UserRole {
+// Enhanced User Profile
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  firstName   String?
+  lastName    String?
+  avatar      String?
+  bio         String?
+  preferences Json?    // Store user preferences as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// Role-Based Access Control
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions Permission[]
+  userRoles   UserRole[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  resource    String   // e.g., "users", "posts", "admin"
+  action      String   // e.g., "create", "read", "update", "delete"
+  roles       Role[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+// Many-to-Many relationship between Users and Roles
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+  assignedAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// Session Management
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Audit Trail
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String
+  action    String      // e.g., "login", "logout", "update_profile"
+  resource  String?     // e.g., "user", "profile"
+  resourceId String?    // ID of the affected resource
+  details   Json?       // Additional details as JSON
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRoleEnum {
   USER
   ADMIN
+  MODERATOR
+  PREMIUM
 } 

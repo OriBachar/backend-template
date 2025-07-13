@@ -5,6 +5,18 @@ import { EC2InstanceParams } from '../types/ec2InstanceParams';
 
 export const deployEC2 = async () => {
     try {
+        let dbEnv = '';
+        if (config.database.type === 'mongodb') {
+            dbEnv = `
+MONGODB_URI=${config.database.mongodb.uri}
+DB_NAME=${config.database.mongodb.dbName}
+`;
+        } else if (config.database.type === 'postgresql') {
+            dbEnv = `
+POSTGRESQL_URL=${config.database.postgresql.url}
+`;
+        }
+
         const userData = `#!/bin/bash
             # Update system
             yum update -y
@@ -26,9 +38,8 @@ export const deployEC2 = async () => {
             cat > .env << EOL
             PORT=${config.server.port}
             NODE_ENV=${config.server.env}
-            MONGODB_URI=${config.mongodb.uri}
-            DB_NAME=${config.mongodb.dbName}
-            JWT_SECRET=${config.jwt.secret}
+            DATABASE_TYPE=${config.database.type}
+            ${dbEnv}            JWT_SECRET=${config.jwt.secret}
             AWS_ACCESS_KEY_ID=${config.aws.accessKeyId}
             AWS_SECRET_ACCESS_KEY=${config.aws.secretAccessKey}
             AWS_REGION=${config.aws.region}
@@ -45,7 +56,7 @@ export const deployEC2 = async () => {
             tags: [
                 {
                     Key: 'Name',
-                    Value: 'Crypto-Dashboard-Backend'
+                    Value: 'backend-template'
                 },
                 {
                     Key: 'Environment',

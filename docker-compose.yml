@@ -8,10 +8,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - PORT=3000
+      # Set DATABASE_TYPE to 'mongodb' or 'postgresql' to switch DBs
+      - DATABASE_TYPE=mongodb # or postgresql
+      # MongoDB envs
       - MONGODB_URI=mongodb://mongodb:27017
       - DB_NAME=backend-template
+      # PostgreSQL envs
+      - POSTGRESQL_URL=postgresql://postgres:postgres@postgres:5432/backend-template
       - JWT_SECRET=development_jwt_secret_key_123
       - CORS_WHITELIST=http://localhost:3000
       - GITHUB_REPO_URL=https://github.com/your-username/backend-template
@@ -27,6 +30,7 @@ services:
       - AWS_EC2_SECURITY_GROUP_IDS=your_aws_ec2_security_grouo_ids
     depends_on:
       - mongodb
+      - postgres
     networks:
       - app-network
 
@@ -39,9 +43,24 @@ services:
     networks:
       - app-network
 
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend-template
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  mongodb_data: 
+  mongodb_data:
+  postgres_data: 

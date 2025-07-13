@@ -1,4 +1,4 @@
-import { UserRepositoryFactory } from '../data-access/repositories/userRepositoryFactory';
+import { UserRepositoryFactory } from '../data-access/repositories/factories/userRepositoryFactory';
 import { IUser, UserRole } from '../types/user';
 import { AppError } from '../types/error';
 import { Response } from 'express';
