@@ -6,25 +6,25 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
-      - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017
-      - DB_NAME=backend-template
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/nestjs-backend
       - JWT_SECRET=development_jwt_secret_key_123
-      - CORS_WHITELIST=http://localhost:3000
-      - GITHUB_REPO_URL=https://github.com/your-username/backend-template
+      - JWT_EXPIRES_IN=15m
+      - CORS_ORIGIN=http://localhost:3000
+      - CORS_WHITELIST=http://localhost:3000,http://localhost:3001
+      - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=your_aws_access_key
       - AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-      - AWS_REGION=your_aws_region
       - AWS_S3_BUCKET=your_s3_bucket
-      - AWS_EC2_IMAGE_ID=your_aws_ec2_image_id
-      - AWS_EC2_INSTANCE_TYPE=your_aws_ec2_instance_type
+      - AWS_EC2_IMAGE_ID=ami-12345678
+      - AWS_EC2_INSTANCE_TYPE=t2.micro
       - AWS_EC2_MIN_COUNT=1
       - AWS_EC2_MAX_COUNT=1
-      - AWS_EC2_KEY_NAME=your_aws_ec2_key_name
-      - AWS_EC2_SECURITY_GROUP_IDS=your_aws_ec2_security_grouo_ids
+      - AWS_EC2_KEY_NAME=your_key_pair_name
+      - AWS_EC2_SECURITY_GROUP_IDS=sg-12345678
     depends_on:
       - mongodb
     networks:

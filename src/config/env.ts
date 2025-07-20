@@ -1,29 +1,31 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { AppError } from '../types/error';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
+// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const getEnv = (key: string, required = false): string => {
     const value = process.env[key];
     if (required && !value) {
-        throw new AppError(`Environment variable ${key} is required`, 500);
+        throw new Error(`Environment variable ${key} is required`);
     }
     return value || '';
 }
 
 export const config = {
     server: {
-        port: getEnv('PORT') || '3000',
+        port: getEnv('AUTH_SERVICE_PORT') || '3001',
         env: getEnv('NODE_ENV') || 'development',
         whitelist: getEnv('CORS_WHITELIST') ? getEnv('CORS_WHITELIST').split(',') : []
     },
     mongodb: {
-        uri: getEnv('MONGODB_URI', true),
-        dbName: getEnv('DB_NAME', true)
+        uri: `${getEnv('MONGODB_URI')}/${getEnv('MONGODB_DATABASE')}`,
+        dbName: getEnv('MONGODB_DATABASE', true)
     },
     jwt: {
-        secret: getEnv('JWT_SECRET', true)
+        secret: getEnv('JWT_SECRET', true),
+        accessTokenExpiry: getEnv('JWT_ACCESS_TOKEN_EXPIRY') || '15m',
+        refreshTokenExpiry: getEnv('JWT_REFRESH_TOKEN_EXPIRY') || '7d'
     },
     aws: {
         accessKeyId: getEnv('AWS_ACCESS_KEY_ID'),

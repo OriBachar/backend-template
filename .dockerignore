@@ -6,4 +6,7 @@ dist
 README.md
 .env
 *.log
-.DS_Store 
+.DS_Store
+test
+coverage
+.nyc_output 
