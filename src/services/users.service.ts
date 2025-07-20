@@ -15,8 +15,9 @@ export class UsersService {
         if (existingUser) {
             throw new ConflictException('User with this email already exists');
         }
-
-        const user = new this.userModel({ email, password });
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new this.userModel({ email, password: hashedPassword });
         return user.save();
     }
 
