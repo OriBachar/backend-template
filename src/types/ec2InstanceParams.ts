@@ -1,6 +1,8 @@
+import { _InstanceType } from '@aws-sdk/client-ec2';
+
 export interface EC2InstanceParams {
     imageId: string;
-    instanceType: string;
+    instanceType: _InstanceType;
     minCount: number;
     maxCount: number;
     keyName?: string;

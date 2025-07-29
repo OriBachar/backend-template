@@ -1,21 +1,32 @@
-import { S3, EC2 } from 'aws-sdk';
-import { s3, ec2 } from '../config/aws';
+import {
+    PutObjectCommand,
+    DeleteObjectCommand,
+    ListBucketsCommand
+} from '@aws-sdk/client-s3';
+import {
+    RunInstancesCommand,
+    StopInstancesCommand,
+    StartInstancesCommand,
+    DescribeInstancesCommand
+} from '@aws-sdk/client-ec2';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { s3Client, ec2Client } from '../config/aws';
 import { AppError } from '../types/error';
 import { EC2InstanceParams } from '../types/ec2InstanceParams';
 import { UploadParams } from '../types/uploadParams';
 
 export const uploadToS3 = async ({ file, fileName, contentType, bucketName }: UploadParams): Promise<string> => {
     try {
-        const params: S3.PutObjectRequest = {
+        const command = new PutObjectCommand({
             Bucket: bucketName,
             Key: fileName,
             Body: file,
             ContentType: contentType,
             ACL: 'public-read'
-        };
+        });
 
-        const result = await s3.upload(params).promise();
-        return result.Location;
+        await s3Client.send(command);
+        return `https://${bucketName}.s3.amazonaws.com/${fileName}`;
     } catch (error) {
         throw new AppError('Failed to upload file to S3', 500);
     }
@@ -23,26 +34,25 @@ export const uploadToS3 = async ({ file, fileName, contentType, bucketName }: Up
 
 export const deleteFromS3 = async (bucketName: string, fileName: string): Promise<void> => {
     try {
-        const params: S3.DeleteObjectRequest = {
+        const command = new DeleteObjectCommand({
             Bucket: bucketName,
             Key: fileName
-        };
+        });
 
-        await s3.deleteObject(params).promise();
+        await s3Client.send(command);
     } catch (error) {
         throw new AppError('Failed to delete file from S3', 500);
     }
 };
 
-export const getSignedUrl = async (bucketName: string, fileName: string, expirationInSeconds = 3600): Promise<string> => {
+export const getSignedUrlForS3 = async (bucketName: string, fileName: string, expirationInSeconds = 3600): Promise<string> => {
     try {
-        const params = {
+        const command = new PutObjectCommand({
             Bucket: bucketName,
-            Key: fileName,
-            Expires: expirationInSeconds
-        };
+            Key: fileName
+        });
 
-        return s3.getSignedUrlPromise('getObject', params);
+        return await getSignedUrl(s3Client, command, { expiresIn: expirationInSeconds });
     } catch (error) {
         throw new AppError('Failed to generate signed URL', 500);
     }
@@ -50,7 +60,7 @@ export const getSignedUrl = async (bucketName: string, fileName: string, expirat
 
 export const launchEC2Instance = async (params: EC2InstanceParams): Promise<string> => {
     try {
-        const ec2Params: EC2.RunInstancesRequest = {
+        const command = new RunInstancesCommand({
             ImageId: params.imageId,
             InstanceType: params.instanceType,
             MinCount: params.minCount,
@@ -64,9 +74,9 @@ export const launchEC2Instance = async (params: EC2InstanceParams): Promise<stri
                     Tags: params.tags
                 }
             ] : undefined
-        };
+        });
 
-        const result = await ec2.runInstances(ec2Params).promise();
+        const result = await ec2Client.send(command);
         const instanceId = result.Instances?.[0]?.InstanceId;
 
         if (!instanceId) {
@@ -78,11 +88,14 @@ export const launchEC2Instance = async (params: EC2InstanceParams): Promise<stri
         throw new AppError('Failed to launch EC2 instance', 500);
     }
 };
+
 export const stopEC2Instance = async (instanceId: string): Promise<void> => {
     try {
-        await ec2.stopInstances({
+        const command = new StopInstancesCommand({
             InstanceIds: [instanceId]
-        }).promise();
+        });
+
+        await ec2Client.send(command);
     } catch (error) {
         throw new AppError('Failed to stop EC2 instance', 500);
     }
@@ -90,9 +103,11 @@ export const stopEC2Instance = async (instanceId: string): Promise<void> => {
 
 export const startEC2Instance = async (instanceId: string): Promise<void> => {
     try {
-        await ec2.startInstances({
+        const command = new StartInstancesCommand({
             InstanceIds: [instanceId]
-        }).promise();
+        });
+
+        await ec2Client.send(command);
     } catch (error) {
         throw new AppError('Failed to start EC2 instance', 500);
     }
@@ -100,11 +115,13 @@ export const startEC2Instance = async (instanceId: string): Promise<void> => {
 
 export const getEC2InstanceStatus = async (instanceId: string): Promise<string> => {
     try {
-        const result = await ec2.describeInstances({
+        const command = new DescribeInstancesCommand({
             InstanceIds: [instanceId]
-        }).promise();
+        });
 
+        const result = await ec2Client.send(command);
         const status = result.Reservations?.[0]?.Instances?.[0]?.State?.Name;
+
         if (!status) {
             throw new AppError('Failed to get instance status', 500);
         }
@@ -117,9 +134,11 @@ export const getEC2InstanceStatus = async (instanceId: string): Promise<string> 
 
 export const checkAWSServices = async (): Promise<boolean> => {
     try {
-        await s3.listBuckets().promise();
+        const listBucketsCommand = new ListBucketsCommand({});
+        await s3Client.send(listBucketsCommand);
 
-        await ec2.describeInstances().promise();
+        const describeInstancesCommand = new DescribeInstancesCommand({});
+        await ec2Client.send(describeInstancesCommand);
 
         return true;
     } catch (error) {
